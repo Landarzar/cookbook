@@ -1,0 +1,67 @@
+\documentclass[fontsize=11pt,a4paper,toc=bibliography,listof=totoc]{scrbook}
+%\usepackage{quattrocento} 
+%\usepackage{tgtermes}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{rezept}
+
+\newindex{zut}{zidx}{gzidx}{Zutatenverzeichnis}
+\newindex{ret}{ridx}{gridx}{Rezepte}
+
+% Datenbank für die Rezeptdaten
+\DTLnewdb{mydata}
+\DTLaddcolumn{mydata}{Gegenstand}
+\DTLaddcolumn{mydata}{Menge}
+
+% Datenbank für Rezeptinformationen
+\DTLnewdb{rezeptDB}
+\DTLaddcolumn{rezeptDB}{Nr}
+\DTLaddcolumn{rezeptDB}{Name}
+\DTLaddcolumn{rezeptDB}{ImgURL}
+\DTLaddcolumn{rezeptDB}{Description}
+
+\DTLnewdb{zubereitDB}
+
+\begin{document}
+	% 	#1 Name des Styles
+	%	#2 OnRezeptBegin  (###1 Name des Rezepts, ###2 Pfad zu einem Bild)
+	%	#3 OnRezeptEnd    (###1 Name des Rezepts, ###2 Pfad zu einem Bild)
+	%	#4 OnZutatenBegin (###1 Die Mengenangabe (z.B. 5 Personen))
+	%	#5 OnZutat        (###1 Menge der Zutat (z.B. 5EL), ###2 Name der Zutat (z.B. Olivenöl))
+	%	#6 OnZutatenEnd   (###1 Die Mengenangabe (z.B. 5 Personen))
+%	\rezeptStyle{Default}
+%	{Name: ##1}
+%	{}
+%	{}
+%	{}
+%	{}
+%	{Begin}
+%	{End}
+	
+\begin{Rezept}{Gebratene Nudeln}{rezepte/gebrateneNudeln.jpg}		
+	\begin{zutaten}{4-6 Personen}
+		\zutat{1 Pkt}{Mie-Nudeln}{Nudeln!Mie}
+		\zutat{2}{Paprika}
+		\zutat{1 Glas}{Sojasprossen}
+		\zutat{3}{Tomaten}
+		\zutat{1/2 Glas}{Maiskölbchen}
+		\zutat{100 g}{Sellerie}
+		\zutat{2}{Zwiebeln}{Zwiebel}
+		\zutat{2 Zehen}{Knoblauch}
+		\zutat{2}{Möhren}
+		\zutat{Handvoll}{Cashewnüsse}
+		\zutat{300 g}{Pilze}
+		\zutat{2 EL}{Massaman Curry}
+		\zutat{1 MS}{Samba Olek}
+		\zutat{etwas}{Salz \& Pfeffer}
+		\zutat{}{Sojasoße}
+		\zutat{viel}{Öl}
+	\end{zutaten}		
+	\begin{zubereitung}{60min}
+Die Paprika in kleine Rechtecke schneiden. Danach die Tomaten, Sellerie und Zwiebeln würfeln, den Knoblauch pressen und sowohl die Pilze als auch die Möhren in dünne Scheiben schneiden. Maiskolben werden in kleine Streifen geschnitten. In einem Wok eine große Menge Öl heiß werden lassen. Nun zuerst die Pilze anbraten und nach einiger Zeit die Zwiebeln, den Sellerie und den Knoblauch hinzu geben und weiter braten. Chashewkerne zerdrücken und in den Wok geben. Die Möhren hinzugeben und die ganze Masse immer wieder rühren. Nun Salz, Pfeffer und einen großzügigen Schuss Sojasoße hinzufügen. Nebenbei nun Wasser aufsetzen und sobald das Wasser kocht die Mie-Nudeln für 3-4 Minuten kochen. Nun das restliche Gemüse zugeben. Samba Olek und Massaman Curry unterheben. Das ganze mindestens 10 Minuten dünsten. Dann die Nudeln zugeben und nochmals 10-20 Minuten im Wok anbraten. Immer wieder mit Sojasoße abschmecken, wenn nötig mehr Massaman Curry und Gewürze hinzufügen.
+		
+Beim Kochen immer nach bedarf Öl nachgeben. Am besten eignet sich Erdnussöl\index[zut]{Ernussöl}.
+\end{zubereitung}
+\end{Rezept}
+\end{document}

@@ -1,0 +1,177 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{rezept}[2015/03/08 Recipes Package]
+
+%\AtBeginDocument
+
+
+\RequirePackage{index}
+\RequirePackage{datatool}
+\RequirePackage{xparse}
+\RequirePackage{ifthen}[1994/06/01]
+
+
+% Zähler für die Rezeptnummer
+\newcounter{rezeptNr}
+\setcounter{rezeptNr}{0}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% User-Interfaces
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Umgebung für ein Rezept. Damit das Rezept vervollständigt wird, 
+% müssen noch die Zutaten (zutaten-Umgebung), 
+% die Kochanleitung (zubereitung-Umgebung) und Optional 
+% die Hinweise zur Zubereitung (zubereitungHint-Umgebung) in der Umgebung ausgefürt werden.
+% Paremeter:
+% 	#1 Name des Rezepts
+%	#2 Pfad zu einem Bild
+\DeclareDocumentEnvironment{Rezept}{m g}{\@OnRezeptBegin{#1}{#2}}{\@OnRezeptEnd{#1}{#2}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dieser Umgebung legt eine Zutatenliste für das Rezept an. Mit Hilfe des zutaten-Befehls, ist es möglich Zutaten hinzu zu fügen.
+% Paremeter:
+% 	#1 Die Mengenangabe (z.B. 5 Personen)
+\DeclareDocumentEnvironment{zutaten}{m}{\@OnZutatenBegin{#1}}{\@OnZutatenEnd{#1}}
+% \DTLcleardb{mydata}\DTLaddcolumn{mydata}{Gegenstand}\DTLaddcolumn{mydata}{Menge}
+% \dtlsort{Gegenstand=ascending}{mydata}{\dtlicompare}\ifthenelse{\boolean{isEmptyThing}}{}{\DTLsavedb{mydata}{\arabic{rezeptNr}.db}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dieser Befehlt, trägt eine Zutat ein. Dabei wird automatisch ein Datenbank eintrag gemacht, und ein entsprechender Indexeintrag erzeugt.
+% Paremeter:
+% 	#1 Menge der Zutat (z.B. 5EL)
+%	#2 Name der Zutat (z.B. Olivenöl)
+%	#3 Name für den Index (kann weggelassen werden)
+\DeclareDocumentCommand{\zutat}{m m g}
+{
+	\IfNoValueTF{#3}{\index[zut]{#2}}{\index[zut]{#3}}
+%	\DTLnewrow{mydata}\DTLnewdbentry{mydata}{Gegenstand}{#2}\DTLnewdbentry{mydata}{Menge}{#1}
+	\@OnZutat{#1}{#2}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Diese Umgebung erlaubt die Angabe der Zubereitung
+% Paremeter:
+% 	#1 Zeit die die Zubereitung dauert (z.B. 60 min)
+\DeclareDocumentEnvironment{zubereitung}{m}{\@OnZubereitungBegin{#1}}{\@OnZubereitungEnd{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Styling-Interfaces
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Styling-Interfaces (Makros)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dieser Befehl wird aufgerufen wenn ein neues Rezept angelegt wird.
+% Paremeter:
+% 	#1 Name des Styles
+%	#2 OnRezeptBegin  (##1 Name des Rezepts, ##2 Pfad zu einem Bild)
+%	#3 OnRezeptEnd    (##1 Name des Rezepts, ##2 Pfad zu einem Bild)
+%	#4 OnZutatenBegin (##1 Die Mengenangabe (z.B. 5 Personen))
+%	#5 OnZutat        (##1 Menge der Zutat (z.B. 5EL), ##2 Name der Zutat (z.B. Olivenöl))
+%	#6 OnZutatenEnd   (##1 Die Mengenangabe (z.B. 5 Personen))
+\DeclareExpandableDocumentCommand{\DefineRezeptStyle}{m m m m m m m m}{
+	\csdef{LoadRezeptStyle#1}{
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn ein neues Rezept angelegt wird.
+	%% Paremeter:
+	%% 	#1 Name des Rezepts
+	%%	#2 Pfad zu einem Bild
+	\DeclareDocumentCommand{\@OnRezeptBegin}{m m}{#2}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn ein neues Rezept nachdem das Rezept komplett definiert wurde.
+	%% Paremeter:
+	%% 	#1 Name des Rezepts
+	%%	#2 Pfad zu einem Bild
+	\DeclareDocumentCommand{\@OnRezeptEnd}{m m}{#3}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn die Zutatenliste begonnen wird.
+	%% Paremeter:
+	%% 	#1 Die Mengenangabe (z.B. 5 Personen)
+	\DeclareDocumentCommand{\@OnZutatenBegin}{m}{#4}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn eine Zutat eingetragen wird.
+	%% Paremeter:
+	%% 	##1 Menge der Zutat (z.B. 5EL)
+	%%	##2 Name der Zutat (z.B. Olivenöl)
+	\DeclareDocumentCommand{\@OnZutat}{m m}{#5}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn die Zutatenliste beendet wird.
+	%% Paremeter:
+	%% 	##1 Die Mengenangabe (z.B. 5 Personen)
+	\DeclareDocumentCommand{\@OnZutatenEnd}{m}{#6}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext beginnt
+	%% Paremeter:
+	%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+	\DeclareDocumentCommand{\@OnZubereitungBegin}{m}{#7}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
+	%% Paremeter:
+	%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+	\DeclareDocumentCommand{\@OnZubereitungEnd}{m}{#8}
+}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Styles
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Im folgenden werden die Styles Definiert
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Styles - Default
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\DefineRezeptStyle{Default}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn ein neues Rezept angelegt wird.
+%% Paremeter:
+%% 	##1 Name des Rezepts
+%%	##2 Pfad zu einem Bild
+{\huge##1\normalsize\newline}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn ein neues Rezept nachdem das Rezept komplett definiert wurde.
+%% Paremeter:
+%% 	##1 Name des Rezepts
+%%	##2 Pfad zu einem Bild
+{}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn die Zutatenliste begonnen wird.
+%% Paremeter:
+%% 	##1 Die Mengenangabe (z.B. 5 Personen)
+{\textbf{Zutaten:}\begin{itemize}}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn eine Zutat eingetragen wird.
+%% Paremeter:
+%% 	##1 Menge der Zutat (z.B. 5EL)
+%%	##2 Name der Zutat (z.B. Olivenöl)
+{\item[##1] ##2}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn die Zutatenliste beendet wird.
+%% Paremeter:
+%% 	##1 Die Mengenangabe (z.B. 5 Personen)
+{\end{itemize}}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext beginnt
+%% Paremeter:
+%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+{\textbf{Zubereitung:}}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
+%% Paremeter:
+%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+{}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Lade Default als Standart-Style
+\LoadRezeptStyleDefault
+
+
+
+
