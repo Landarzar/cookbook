@@ -1,18 +1,43 @@
+%% rezept.sty
+%% Copyright 2015 Kai Sauerwald
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3 or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+% 
+% The Current Maintainer of this work is Kai Sauerwald.
+%
+% This work consists of the file rezept.sty
+
+
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{rezept}[2015/03/08 Recipes Package]
-
-%\AtBeginDocument
-
 
 \RequirePackage{index}
 \RequirePackage{datatool}
 \RequirePackage{xparse}
-\RequirePackage{ifthen}[1994/06/01]
+\RequirePackage{units}
+\RequirePackage{ifthen}
+\RequirePackage{xcomment}
+\RequirePackage{tikz}
 
+\usetikzlibrary{decorations.markings,decorations.pathreplacing}
+\usetikzlibrary{shapes.geometric,automata,positioning}
+\usetikzlibrary{shadows,calc}
 
 % Zähler für die Rezeptnummer
 \newcounter{rezeptNr}
 \setcounter{rezeptNr}{0}
+
+\newboolean{@filterRezept}
+\setboolean{@filterRezept}{true}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -27,7 +52,7 @@
 % Paremeter:
 % 	#1 Name des Rezepts
 %	#2 Pfad zu einem Bild
-\DeclareDocumentEnvironment{Rezept}{m g}{\@OnRezeptBegin{#1}{#2}}{\@OnRezeptEnd{#1}{#2}}
+\DeclareDocumentEnvironment{Rezept}{m g g}{\@OnRezeptBegin{#1}{#2}}{\@OnRezeptEnd{#1}{#2}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Dieser Umgebung legt eine Zutatenliste für das Rezept an. Mit Hilfe des zutaten-Befehls, ist es möglich Zutaten hinzu zu fügen.
@@ -133,7 +158,7 @@
 %% Paremeter:
 %% 	##1 Name des Rezepts
 %%	##2 Pfad zu einem Bild
-{\huge##1\normalsize\newline}%
+{\section{##1}}%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Dieser Befehl wird aufgerufen wenn ein neues Rezept nachdem das Rezept komplett definiert wurde.
 %% Paremeter:
@@ -166,6 +191,64 @@
 %% Paremeter:
 %% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
 {}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Styles - Default
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\DefineRezeptStyle{TikzFanyz}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OnRezeptBegin
+%% Dieser Befehl wird aufgerufen wenn ein neues Rezept angelegt wird.
+%% Paremeter:
+%% 	##1 Name des Rezepts
+%%	##2 Pfad zu einem Bild
+{	\clearpage\begin{tikzpicture}[very thick,overlay,remember picture]
+	\IfNoValueF{##2}{\node [anchor=north west, inner sep=0pt, scope fading=south] at ([xshift=1mm,yshift=-1mm] current page.north west) {\includegraphics[width=214mm, height=301mm,keepaspectratio]{##2}};}
+	\node [anchor=north east] at (\textwidth,-6) {\Huge \textbf{##1}};
+	\end{tikzpicture}\vspace{8cm}\normalsize\addcontentsline{toc}{section}{##1}	}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OnRezeptEnd
+%% Dieser Befehl wird aufgerufen wenn ein neues Rezept nachdem das Rezept komplett definiert wurde.
+%% Paremeter:
+%% 	##1 Name des Rezepts
+%%	##2 Pfad zu einem Bild
+{\clearpage}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OnZutatenBegin
+%% Dieser Befehl wird aufgerufen wenn die Zutatenliste begonnen wird.
+%% Paremeter:
+%% 	##1 Die Mengenangabe (z.B. 5 Personen)
+{\textbf{\Large Zutaten (##1)\hfill\large Bewertung:\normalsize}\ \underline{\phantom{$-----------$}}\begin{multicols}{3}\begin{tabular}{rl}}%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn eine Zutat eingetragen wird.
+	%% Paremeter:
+	%% 	##1 Menge der Zutat (z.B. 5EL)
+	%%	##2 Name der Zutat (z.B. Olivenöl)
+	{##1 & ##2\\}%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn die Zutatenliste beendet wird.
+	%% Paremeter:
+	%% 	##1 Die Mengenangabe (z.B. 5 Personen)
+	{\end{tabular}\end{multicols}}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext beginnt
+%% Paremeter:
+%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+{\textbf{\Large Zubereitung\hfill\large ##1}\normalsize\newline}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
+%% Paremeter:
+%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+{}
+
+\newcommand{\neuespalte}{\end{tabular}\vfill\columnbreak\begin{tabular}{rl}}
+
+\newcommand{\neuerabschnitt}[1]{\end{tabular}\vfill\columnbreak\textbf{#1}\newline\begin{tabular}{rl}}
+\newcommand{\neuerabschnittNB}[1]{\end{tabular}\newline\textbf{#1}\newline\begin{tabular}{rl}}
+
+\newcommand{\emptyline}{&\\}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
