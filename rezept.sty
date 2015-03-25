@@ -32,17 +32,31 @@
 \usetikzlibrary{shadows,calc}
 
 % Zähler für die Rezeptnummer
-\newcounter{rezeptNr}
-\setcounter{rezeptNr}{0}
+\newcounter{@rezeptNr}
+\setcounter{@rezeptNr}{0}
 
+% Gibt an ob die Rezepte nur Selektiv ausgeben werden sollen
 \newboolean{@filterRezept}
-\setboolean{@filterRezept}{true}
+\setboolean{@filterRezept}{false}
 
+% Name der Kategorie
+\def\@filterKategory{\NoValue}
 
+% Name der Kategorie des Rezepts
+\def\@rezeptKategory{\NoValue}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% User-Interfaces
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Führt #1 aus, falls der #1 der Kategorie entspricht oder @filterRezept False ist.
+\ProvideDocumentCommand{\ifFilterMatch}{m o}{\ifthenelse{\( \not \boolean{@filterRezept} \) \or \equal{\@filterKategory}{\@rezeptKategory}}{#1}{\IfValueT{#2}{#2}}   }
+
+\newindex{zut}{zidx}{gzidx}{Zutatenverzeichnis}
+
+\newcommand{\printTest}[1]{\message{Kategorie: #1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User-Interfaces %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Umgebung für ein Rezept. Damit das Rezept vervollständigt wird, 
@@ -51,16 +65,17 @@
 % die Hinweise zur Zubereitung (zubereitungHint-Umgebung) in der Umgebung ausgefürt werden.
 % Paremeter:
 % 	#1 Name des Rezepts
-%	#2 Pfad zu einem Bild
-\DeclareDocumentEnvironment{Rezept}{m g g}{\@OnRezeptBegin{#1}{#2}}{\@OnRezeptEnd{#1}{#2}}
+%	#2 Pfad zu einem Bild  (Optional)
+%   #3 Kategorie (Optional)
+\DeclareDocumentEnvironment{Rezept}{m g g}%
+{\def\@rezeptKategory{#3}\ifFilterMatch{\stepcounter{@rezeptNr}\@OnRezeptBegin{#1}{#2}}}%
+{\ifFilterMatch{\@OnRezeptEnd{#1}{#2}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Dieser Umgebung legt eine Zutatenliste für das Rezept an. Mit Hilfe des zutaten-Befehls, ist es möglich Zutaten hinzu zu fügen.
 % Paremeter:
 % 	#1 Die Mengenangabe (z.B. 5 Personen)
-\DeclareDocumentEnvironment{zutaten}{m}{\@OnZutatenBegin{#1}}{\@OnZutatenEnd{#1}}
-% \DTLcleardb{mydata}\DTLaddcolumn{mydata}{Gegenstand}\DTLaddcolumn{mydata}{Menge}
-% \dtlsort{Gegenstand=ascending}{mydata}{\dtlicompare}\ifthenelse{\boolean{isEmptyThing}}{}{\DTLsavedb{mydata}{\arabic{rezeptNr}.db}}
+\DeclareDocumentEnvironment{zutaten}{m}{\ifFilterMatch{\@OnZutatenBegin{#1}}}{\ifFilterMatch{\@OnZutatenEnd{#1}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Dieser Befehlt, trägt eine Zutat ein. Dabei wird automatisch ein Datenbank eintrag gemacht, und ein entsprechender Indexeintrag erzeugt.
@@ -68,21 +83,52 @@
 % 	#1 Menge der Zutat (z.B. 5EL)
 %	#2 Name der Zutat (z.B. Olivenöl)
 %	#3 Name für den Index (kann weggelassen werden)
-\DeclareDocumentCommand{\zutat}{m m g}
-{
-	\IfNoValueTF{#3}{\index[zut]{#2}}{\index[zut]{#3}}
-%	\DTLnewrow{mydata}\DTLnewdbentry{mydata}{Gegenstand}{#2}\DTLnewdbentry{mydata}{Menge}{#1}
-	\@OnZutat{#1}{#2}
+\DeclareDocumentCommand{\zutat}{m m g}%
+{\ifFilterMatch{\IfNoValueTF{#3}{\index[zut]{#2}}{\index[zut]{#3}}
+	\@OnZutat{#1}{#2}}
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Diese Umgebung erlaubt die Angabe der Zubereitung
 % Paremeter:
 % 	#1 Zeit die die Zubereitung dauert (z.B. 60 min)
-\DeclareDocumentEnvironment{zubereitung}{m}{\@OnZubereitungBegin{#1}}{\@OnZubereitungEnd{#1}}
+% 	#1 Zubereitunstext
+\DeclareDocumentCommand{\zubereitung}{g m}{\ifFilterMatch{\@OnZubereitungBegin{#1}\@OnZubereitung{#1}{#2}\@OnZubereitungEnd{#1}}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dieser Befehlt gibt den Zutatenindex aus
+% Paremeter:
+\DeclareDocumentCommand{\printIndexZutaten}{}{\printindex[zut]}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dieser Befehlt gibt die Kategorie des Rezept aus
+% Paremeter:
+\DeclareDocumentCommand{\rezeptNr}{}{\arabic{@rezeptNr}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dieser Befehlt gibt die Rezeptnummer aus
+% Paremeter:
+\DeclareDocumentCommand{\rezeptKategorie}{}{\@rezeptKategorie}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Filtert die Kategorie
+% Paremeter:
+\DeclareDocumentCommand{\rezeptFilterRezeptByKategorie}{m}{\def\@filterKategory{#1}	\setboolean{@filterRezept}{true}}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Filtert die Kategorie
+% Paremeter:
+\DeclareDocumentCommand{\rezeptDisableFilterByKategorie}{m}{\def\@filterKategory{\NoValue}\setboolean{@filterRezept}{false}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Styling-Interfaces
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Styling-Interfaces %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -100,7 +146,7 @@
 %	#4 OnZutatenBegin (##1 Die Mengenangabe (z.B. 5 Personen))
 %	#5 OnZutat        (##1 Menge der Zutat (z.B. 5EL), ##2 Name der Zutat (z.B. Olivenöl))
 %	#6 OnZutatenEnd   (##1 Die Mengenangabe (z.B. 5 Personen))
-\DeclareExpandableDocumentCommand{\DefineRezeptStyle}{m m m m m m m m}{
+\DeclareExpandableDocumentCommand{\DefineRezeptStyle}{m m m m m m m m m}{
 	\csdef{LoadRezeptStyle#1}{
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%% Dieser Befehl wird aufgerufen wenn ein neues Rezept angelegt wird.
@@ -139,7 +185,13 @@
 	%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
 	%% Paremeter:
 	%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
-	\DeclareDocumentCommand{\@OnZubereitungEnd}{m}{#8}
+	%% 	##2 Zubereitungstext
+	\DeclareDocumentCommand{\@OnZubereitung}{m m}{#8}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
+	%% Paremeter:
+	%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+	\DeclareDocumentCommand{\@OnZubereitungEnd}{m}{#9}
 }
 }
 
@@ -190,11 +242,17 @@
 %% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
 %% Paremeter:
 %% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+%% 	##2 Zubereitungstext
+{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
+%% Paremeter:
+%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
 {}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Styles - Default
+% Styles - TikzFanyz
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \DefineRezeptStyle{TikzFanyz}%
@@ -204,10 +262,10 @@
 %% Paremeter:
 %% 	##1 Name des Rezepts
 %%	##2 Pfad zu einem Bild
-{	\clearpage\begin{tikzpicture}[very thick,overlay,remember picture]
+{\clearpage \begin{tikzpicture}[very thick,overlay,remember picture]
 	\IfNoValueF{##2}{\node [anchor=north west, inner sep=0pt, scope fading=south] at ([xshift=1mm,yshift=-1mm] current page.north west) {\includegraphics[width=214mm, height=301mm,keepaspectratio]{##2}};}
 	\node [anchor=north east] at (\textwidth,-6) {\Huge \textbf{##1}};
-	\end{tikzpicture}\vspace{8cm}\normalsize\addcontentsline{toc}{section}{##1}	}%
+	\end{tikzpicture}\vspace{8cm}\linebreak\normalsize\addcontentsline{toc}{section}{##1}	}%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OnRezeptEnd
 %% Dieser Befehl wird aufgerufen wenn ein neues Rezept nachdem das Rezept komplett definiert wurde.
@@ -220,7 +278,7 @@
 %% Dieser Befehl wird aufgerufen wenn die Zutatenliste begonnen wird.
 %% Paremeter:
 %% 	##1 Die Mengenangabe (z.B. 5 Personen)
-{\textbf{\Large Zutaten (##1)\hfill\large Bewertung:\normalsize}\ \underline{\phantom{$-----------$}}\begin{multicols}{3}\begin{tabular}{rl}}%
+{\textbf{\Large Zutaten (##1)}\begin{multicols}{3}\begin{tabular}{rl}}%
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%% Dieser Befehl wird aufgerufen wenn eine Zutat eingetragen wird.
 	%% Paremeter:
@@ -241,14 +299,20 @@
 %% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
 %% Paremeter:
 %% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+%% 	##2 Zubereitungstext
+{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
+%% Paremeter:
+%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
 {}
 
-\newcommand{\neuespalte}{\end{tabular}\vfill\columnbreak\begin{tabular}{rl}}
-
-\newcommand{\neuerabschnitt}[1]{\end{tabular}\vfill\columnbreak\textbf{#1}\newline\begin{tabular}{rl}}
-\newcommand{\neuerabschnittNB}[1]{\end{tabular}\newline\textbf{#1}\newline\begin{tabular}{rl}}
-
-\newcommand{\emptyline}{&\\}
+%\newcommand{\neuespalte}{\end{tabular}\vfill\columnbreak\begin{tabular}{rl}}
+%
+%\newcommand{\neuerabschnitt}[1]{\end{tabular}\vfill\columnbreak\textbf{#1}\newline\begin{tabular}{rl}}
+%\newcommand{\neuerabschnittNB}[1]{\end{tabular}\newline\textbf{#1}\newline\begin{tabular}{rl}}
+%
+%\newcommand{\emptyline}{&\\}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

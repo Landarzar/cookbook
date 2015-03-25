@@ -8,74 +8,106 @@
 \usepackage{subcaption}
 \usepackage{float}
 \usepackage{multicol}
+\usepackage{comment}
 %\usepackage[a5paper]{geometry}
 
 \usepackage{rezept}
 
-\newindex{zut}{zidx}{gzidx}{Zutatenverzeichnis}
-\newindex{ret}{ridx}{gridx}{Rezepte}
+%\newindex{zut}{zidx}{gzidx}{Zutatenverzeichnis}
+%\newindex{ret}{ridx}{gridx}{Rezepte}
 
+\newboolean{test}
+\setboolean{test}{true}
 
 \begin{document}
 
 \DefineRezeptStyle{Christine}%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OnRezeptBegin
 %% Dieser Befehl wird aufgerufen wenn ein neues Rezept angelegt wird.
 %% Paremeter:
 %% 	##1 Name des Rezepts
 %%	##2 Pfad zu einem Bild
-{\clearpage\section*{##1}\begin{figure}\includegraphics[height=2cm, keepaspectratio]{##2}\end{figure}}%
+{	\clearpage\begin{tikzpicture}[very thick,overlay,remember picture]
+	\IfNoValueF{##2}{\node [anchor=north west, inner sep=0pt, scope fading=south] at ([xshift=1mm,yshift=-1mm] current page.north west) {\includegraphics[width=214mm, height=301mm,keepaspectratio]{##2}};}
+	\ifthispageodd{\node [anchor=north east] at (\textwidth,-6) {\Huge \textbf{##1}};}{\node [anchor=north west] at (-1em,-6) {\Huge \textbf{##1}};}
+	\end{tikzpicture}\vspace{8cm}\linebreak\normalsize\addcontentsline{toc}{section}{##1}	}%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OnRezeptEnd
 %% Dieser Befehl wird aufgerufen wenn ein neues Rezept nachdem das Rezept komplett definiert wurde.
 %% Paremeter:
 %% 	##1 Name des Rezepts
 %%	##2 Pfad zu einem Bild
-{}%
+{\clearpage}%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OnZutatenBegin
 %% Dieser Befehl wird aufgerufen wenn die Zutatenliste begonnen wird.
 %% Paremeter:
 %% 	##1 Die Mengenangabe (z.B. 5 Personen)
-{\textbf{Zutaten:}\begin{multicols}{3}}%
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	%% Dieser Befehl wird aufgerufen wenn eine Zutat eingetragen wird.
-	%% Paremeter:
-	%% 	##1 Menge der Zutat (z.B. 5EL)
-	%%	##2 Name der Zutat (z.B. Olivenöl)
-	{##1  ##2\\}%
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	%% Dieser Befehl wird aufgerufen wenn die Zutatenliste beendet wird.
-	%% Paremeter:
-	%% 	##1 Die Mengenangabe (z.B. 5 Personen)
-	{\end{multicols}}%
+{\textbf{\Large Zutaten (##1)}\begin{multicols}{3}\begin{tabular}{rl}}%
+		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		%% Dieser Befehl wird aufgerufen wenn eine Zutat eingetragen wird.
+		%% Paremeter:
+		%% 	##1 Menge der Zutat (z.B. 5EL)
+		%%	##2 Name der Zutat (z.B. Olivenöl)
+		{##1 & ##2\\}%
+		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		%% Dieser Befehl wird aufgerufen wenn die Zutatenliste beendet wird.
+		%% Paremeter:
+		%% 	##1 Die Mengenangabe (z.B. 5 Personen)
+		{\end{tabular}\end{multicols}}%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Dieser Befehl wird aufgerufen wenn der Zubereitungstext beginnt
 %% Paremeter:
 %% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
-{\noindent\textbf{Zubereitung} \hfill (##1)\linebreak}%
+{\noindent\textbf{\Large Zubereitung\hfill\large ##1}\normalsize\newline}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
+%% Paremeter:
+%% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
+%% 	##2 Zubereitungstext
+{##2}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Dieser Befehl wird aufgerufen wenn der Zubereitungstext endet
 %% Paremeter:
 %% 	##1 Zeit die die Zubereitung dauert (z.B. 60 min)
 {}
 
-%\LoadRezeptStyleChristine
+\LoadRezeptStyleChristine
 
-\LoadRezeptStyleTikzFanyz
+\ProvideDocumentCommand{\neuespalte}{}{\ifFilterMatch{\end{tabular}\vfill\columnbreak\begin{tabular}{rl}}}
+
+
+%\DeclareDocumentEnvironment{zubereitung}{m}{\myempty\begingroup}{\endgroup  }
+%\excludecomment{zubereitung}
+%\edef\zubereitung\iffalse
+%\edef\endzubereitung\fi
+
+%\LoadRezeptStyleTikzFanyz
 
 \chapter{Hauptgerichte}
+\message{test}
+\rezeptFilterRezeptByKategorie{Hauptgericht}
+%\makeatletter
+%\def\@rezeptKategory{Hauptgericht}
+%\ifthenelse{\( \not \boolean{@filterRezept} \) \or \equal{\@filterKategory}{\@rezeptKategory}}{test}{test2}
+%\ifFilterMatch{The Filter Matches}
+%\makeatother
 
-\begin{Rezept}{Gebratene Nudeln}{nudeln.jpg}		
+\begin{Rezept}{Gebratene Nudeln}{nudeln.jpg}{Hauptgericht}
 	\begin{zutaten}{4-6 Personen}
 		\zutat{1 Pkt}{Mie-Nudeln}{Nudeln!Mie}
 		\zutat{2}{Paprika}
 		\zutat{1 Glas}{Sojasprossen}
 		\zutat{3}{Tomaten}
 		\zutat{1/2 Glas}{Maiskölbchen}
+		\neuespalte
 		\zutat{100 g}{Sellerie}
 		\zutat{2}{Zwiebeln}{Zwiebel}
 		\zutat{2 Zehen}{Knoblauch}
 		\zutat{2}{Möhren}
 		\zutat{Handvoll}{Cashewnüsse}
+		\neuespalte
 		\zutat{300 g}{Pilze}
 		\zutat{2 EL}{Massaman Curry}
 		\zutat{1 MS}{Samba Olek}
@@ -83,26 +115,26 @@
 		\zutat{}{Sojasoße}
 		\zutat{viel}{Öl}
 	\end{zutaten}		
-	\begin{zubereitung}{60min}
-Die Paprika in kleine Rechtecke schneiden. Danach die Tomaten, Sellerie und Zwiebeln würfeln, den Knoblauch pressen und sowohl die Pilze als auch die Möhren in dünne Scheiben schneiden. Maiskolben werden in kleine Streifen geschnitten. In einem Wok eine große Menge Öl heiß werden lassen. Nun zuerst die Pilze anbraten und nach einiger Zeit die Zwiebeln, den Sellerie und den Knoblauch hinzu geben und weiter braten. Chashewkerne zerdrücken und in den Wok geben. Die Möhren hinzugeben und die ganze Masse immer wieder rühren. Nun Salz, Pfeffer und einen großzügigen Schuss Sojasoße hinzufügen. Nebenbei nun Wasser aufsetzen und sobald das Wasser kocht die Mie-Nudeln für 3-4 Minuten kochen. Nun das restliche Gemüse zugeben. Samba Olek und Massaman Curry unterheben. Das ganze mindestens 10 Minuten dünsten. Dann die Nudeln zugeben und nochmals 10-20 Minuten im Wok anbraten. Immer wieder mit Sojasoße abschmecken, wenn nötig mehr Massaman Curry und Gewürze hinzufügen.
-		
-Beim Kochen immer nach bedarf Öl nachgeben. Am besten eignet sich Erdnussöl\index[zut]{Ernussöl}.
-\end{zubereitung}
+	\zubereitung{60min}{
+Die Paprika in kleine Rechtecke schneiden. Danach die Tomaten, Sellerie und Zwiebeln würfeln, den Knoblauch pressen und sowohl die Pilze als auch die Möhren in dünne Scheiben schneiden. Maiskolben werden in kleine Streifen geschnitten. In einem Wok eine große Menge Öl heiß werden lassen. Nun zuerst die Pilze anbraten und nach einiger Zeit die Zwiebeln, den Sellerie und den Knoblauch hinzu geben und weiter braten. Chashewkerne zerdrücken und in den Wok geben. Die Möhren hinzugeben und die ganze Masse immer wieder rühren. Nun Salz, Pfeffer und einen großzügigen Schuss Sojasoße hinzufügen. Nebenbei nun Wasser aufsetzen und sobald das Wasser kocht die Mie-Nudeln für 3-4 Minuten kochen. Nun das restliche Gemüse zugeben. Samba Olek und Massaman Curry unterheben. Das ganze mindestens 10 Minuten dünsten. Dann die Nudeln zugeben und nochmals 10-20 Minuten im Wok anbraten. Immer wieder mit Sojasoße abschmecken, wenn nötig mehr Massaman Curry und Gewürze hinzufügen.%
+Beim Kochen immer nach bedarf Öl nachgeben. Am besten eignet sich Erdnussöl\index[zut]{Ernussöl}.}
 \end{Rezept}
+%\rezeptFilterRezeptByKategorie{Nachspeise}
 
-
-\begin{Rezept}{Gebratene Nudeln}{nudeln.jpg}		
+\begin{Rezept}{Gebratene Nudeln}{nudeln.jpg}{Nachspeise}	
 	\begin{zutaten}{4-6 Personen}
 		\zutat{1 Pkt}{Mie-Nudeln}{Nudeln!Mie}
 		\zutat{2}{Paprika}
 		\zutat{1 Glas}{Sojasprossen}
 		\zutat{3}{Tomaten}
 		\zutat{1/2 Glas}{Maiskölbchen}
+		\neuespalte
 		\zutat{100 g}{Sellerie}
 		\zutat{2}{Zwiebeln}{Zwiebel}
 		\zutat{2 Zehen}{Knoblauch}
 		\zutat{2}{Möhren}
 		\zutat{Handvoll}{Cashewnüsse}
+		\neuespalte
 		\zutat{300 g}{Pilze}
 		\zutat{2 EL}{Massaman Curry}
 		\zutat{1 MS}{Samba Olek}
@@ -110,10 +142,12 @@ Beim Kochen immer nach bedarf Öl nachgeben. Am besten eignet sich Erdnussöl\in
 		\zutat{}{Sojasoße}
 		\zutat{viel}{Öl}
 	\end{zutaten}		
-	\begin{zubereitung}{60min}
-		Die Paprika in kleine Rechtecke schneiden. Danach die Tomaten, Sellerie und Zwiebeln würfeln, den Knoblauch pressen und sowohl die Pilze als auch die Möhren in dünne Scheiben schneiden. Maiskolben werden in kleine Streifen geschnitten. In einem Wok eine große Menge Öl heiß werden lassen. Nun zuerst die Pilze anbraten und nach einiger Zeit die Zwiebeln, den Sellerie und den Knoblauch hinzu geben und weiter braten. Chashewkerne zerdrücken und in den Wok geben. Die Möhren hinzugeben und die ganze Masse immer wieder rühren. Nun Salz, Pfeffer und einen großzügigen Schuss Sojasoße hinzufügen. Nebenbei nun Wasser aufsetzen und sobald das Wasser kocht die Mie-Nudeln für 3-4 Minuten kochen. Nun das restliche Gemüse zugeben. Samba Olek und Massaman Curry unterheben. Das ganze mindestens 10 Minuten dünsten. Dann die Nudeln zugeben und nochmals 10-20 Minuten im Wok anbraten. Immer wieder mit Sojasoße abschmecken, wenn nötig mehr Massaman Curry und Gewürze hinzufügen.
-		
+	\zubereitung{60min}{
+		Die Paprika in kleine Rechtecke schneiden. Danach die Tomaten, Sellerie und Zwiebeln würfeln, den Knoblauch pressen und sowohl die Pilze als auch die Möhren in dünne Scheiben schneiden. Maiskolben werden in kleine Streifen geschnitten. In einem Wok eine große Menge Öl heiß werden lassen. Nun zuerst die Pilze anbraten und nach einiger Zeit die Zwiebeln, den Sellerie und den Knoblauch hinzu geben und weiter braten. Chashewkerne zerdrücken und in den Wok geben. Die Möhren hinzugeben und die ganze Masse immer wieder rühren. Nun Salz, Pfeffer und einen großzügigen Schuss Sojasoße hinzufügen. Nebenbei nun Wasser aufsetzen und sobald das Wasser kocht die Mie-Nudeln für 3-4 Minuten kochen. Nun das restliche Gemüse zugeben. Samba Olek und Massaman Curry unterheben. Das ganze mindestens 10 Minuten dünsten. Dann die Nudeln zugeben und nochmals 10-20 Minuten im Wok anbraten. Immer wieder mit Sojasoße abschmecken, wenn nötig mehr Massaman Curry und Gewürze hinzufügen.		
 		Beim Kochen immer nach bedarf Öl nachgeben. Am besten eignet sich Erdnussöl\index[zut]{Ernussöl}.
-	\end{zubereitung}
+	}
 \end{Rezept}
+
+
 \end{document}
+
